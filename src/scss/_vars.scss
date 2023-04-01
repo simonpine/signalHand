@@ -21,3 +21,6 @@ $colors:(
     color: map-get($map:$colors, $key: 'secu');
     font-family: 'Kanit', sans-serif;
 };
+* {
+    background-color: map-get($map:$colors, $key: 'main');
+}
