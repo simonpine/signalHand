@@ -6,9 +6,11 @@ import * as handpose from "@tensorflow-models/handpose"
 //import * as posenet from "@tensorflow-models/posenet"
 import Webcam from 'react-webcam';
 import { drawHand } from './utilities';
+import * as fp from 'fingerpose'
 //import { drawKeypoints, drawSkeleton } from "./utilities2"
 
 function App() {
+  const [letter, setLetter] = useState('')
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -43,7 +45,29 @@ function App() {
 
       // Make Detections
       const hand = await net.estimateHands(video);
-     //console.log(hand);
+      //console.log(hand);
+
+      if (hand.length > 0) {
+        const GE = new fp.GestureEstimator([
+          fp.Gestures.VictoryGesture,
+          fp.Gestures.ThumbsUpGesture,
+        ]);
+        const gesture = await GE.estimate(hand[0].landmarks, 4);
+
+        if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+          // console.log(gesture.gestures);
+          if(gesture.gestures.length === 1){
+            setLetter(gesture.gestures[0].name)
+          }
+          else{
+            const confidence = gesture.gestures.sort((a, b) => a.score - b.score)
+            setLetter(confidence[confidence.length - 1].name)
+          }
+
+          //console.log(gesture)
+        }
+      }
+
 
       // Draw mesh
       const ctx = canvasRef.current.getContext("2d");
@@ -56,6 +80,7 @@ function App() {
     <div className="App">
       <Webcam ref={webcamRef} className='webcam'></Webcam>
       <canvas ref={canvasRef} className='webcamCanvas'></canvas>
+      <h1 style={{ zIndex: "1000", position: "fixed" }}>{letter}</h1>
     </div>
   );
 }
